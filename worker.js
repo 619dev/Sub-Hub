@@ -1316,7 +1316,7 @@ function serveAdminPanel(env, adminPath) {
       // 切换批量删除模式
       function toggleBatchDelete(subscriptionPath) {
         const nodeListArea = document.getElementById('node-list-' + subscriptionPath);
-        const checkboxes = nodeListArea.querySelectorAll('.form-check');
+        const checkboxes = nodeListArea.querySelectorAll('.node-checkbox');
         const deleteBtn = document.getElementById('batch-delete-btn-' + subscriptionPath);
         const deleteActions = document.getElementById('batch-delete-actions-' + subscriptionPath);
         
@@ -1324,7 +1324,7 @@ function serveAdminPanel(env, adminPath) {
         
         // 切换勾选框显示
         checkboxes.forEach(checkbox => {
-          checkbox.style.display = isEnteringBatchMode ? 'block' : 'none';
+          checkbox.style.display = isEnteringBatchMode ? 'inline-block' : 'none';
         });
         
         // 切换按钮和操作区域
@@ -1743,18 +1743,16 @@ function serveAdminPanel(env, adminPath) {
             
             return \`
                   <tr class="node-row" data-id="\${node.id}" data-order="\${node.node_order}">
-      <td>
+      <td class="align-middle">
         <div class="d-flex align-items-center">
-          <div class="form-check me-2" style="display: none;">
-            <input class="form-check-input node-checkbox" type="checkbox" value="\${node.id}" 
-              data-subscription="\${subscriptionPath}" style="margin-top: 0;">
-          </div>
+          <input class="node-checkbox me-2" type="checkbox" value="\${node.id}" 
+            data-subscription="\${subscriptionPath}" style="display: none;">
           <div class="text-nowrap text-truncate" style="max-width: 300px; padding-left: 0.5rem;" title="\${node.name}">
             \${node.name}
           </div>
         </div>
       </td>
-                <td>
+                <td class="align-middle">
                   <div class="d-flex justify-content-between align-items-center" style="gap: 8px;">
                               <div class="text-nowrap text-truncate" style="max-width: 400px; margin-left: 4rem;" title="\${nodeLink}">
             \${nodeLink}
