@@ -182,6 +182,11 @@ export default {
             return handleDeleteNode(env, subscriptionPath, nodeId);
           }
           
+          // 切换节点状态
+          if (nodeId && nodeId !== 'reorder' && method === 'PATCH') {
+            return handleToggleNode(env, subscriptionPath, nodeId, request);
+          }
+          
           return new Response(JSON.stringify({
             success: false,
             message: 'Method Not Allowed'
@@ -1040,7 +1045,13 @@ function serveAdminPanel(env, adminPath) {
         margin: 0 !important;
       }
 
-            /* 移动端适配样式 */      @media (max-width: 767px) {        /* 基础布局调整 */        .container {          padding: 0 15px;        }        .navbar {          margin-bottom: 2rem;          padding: 0.8rem 1rem;        }        .btn-group {          flex-direction: column;        }        /* 订阅项样式调整 */        .subscription-item {          padding: 1rem;        }        .subscription-item > div {          flex-direction: column;          align-items: flex-start !important;        }        .subscription-item .link-label {          margin: 1rem 0 0;          width: 100%;        }        .subscription-actions {          margin-top: 1rem;          width: 100%;          flex-direction: row !important;          gap: 0.5rem;        }        .subscription-actions .btn {          flex: 1;          font-size: 0.875rem;          padding: 0.5rem;        }        .subscription-actions .btn i {          margin-right: 0.25rem;          font-size: 0.875rem;        }        /* 模态框调整 */        .modal-dialog {          margin: 0.5rem;        }        .modal-content {          border-radius: 1rem;        }        /* Toast提示调整 */        .toast-container {          right: 0;          left: 0;          bottom: 1rem;          top: auto;          margin: 0 1rem;        }        .toast {          width: 100%;        }        /* 节点列表移动端优化 */        .table {          table-layout: fixed;          width: 100%;          margin-bottom: 0 !important;        }        .table thead th:first-child {          padding-left: 1rem !important;          width: 100% !important;        }        .table thead th:last-child {          display: none !important;        }        .node-row td {          padding: 0.5rem !important;        }        .node-row td:first-child {          font-size: 0.85rem;          padding-right: 0 !important;          width: calc(100% - 90px) !important;        }        .node-row td:first-child .text-truncate {          max-width: 100% !important;          width: 100% !important;          padding-right: 8px !important;        }        .node-row td:last-child {          padding-left: 0 !important;          width: 90px !important;          position: relative !important;        }        .node-row td:last-child .text-truncate {          display: none !important;        }        /* 节点操作按钮移动端优化 */        .node-actions {          margin: 0 !important;          gap: 2px !important;          justify-content: flex-end !important;          width: 90px !important;          position: absolute !important;          right: 4px !important;          flex-wrap: nowrap !important;          align-items: center !important;        }        .node-actions .btn {          padding: 2px 4px !important;          min-width: 28px !important;          height: 28px !important;          margin: 0 !important;        }        .node-actions .btn i {          font-size: 12px;          line-height: 1;          display: flex !important;          align-items: center !important;          justify-content: center !important;        }      }
+      .node-checkbox {
+        vertical-align: top;
+        margin: 0;
+        margin-top: 1.5px;
+      }
+
+            /* 移动端适配样式 */      @media (max-width: 767px) {        /* 基础布局调整 */        .container {          padding: 0 15px;        }        .navbar {          margin-bottom: 2rem;          padding: 0.8rem 1rem;        }        .btn-group {          flex-direction: column;        }        /* 订阅项样式调整 */        .subscription-item {          padding: 1rem;        }        .subscription-item > div {          flex-direction: column;          align-items: flex-start !important;        }        .subscription-item .link-label {          margin: 1rem 0 0;          width: 100%;        }        .subscription-actions {          margin-top: 1rem;          width: 100%;          flex-direction: row !important;          gap: 0.5rem;        }        .subscription-actions .btn {          flex: 1;          font-size: 0.875rem;          padding: 0.5rem;        }        .subscription-actions .btn i {          margin-right: 0.25rem;          font-size: 0.875rem;        }        /* 模态框调整 */        .modal-dialog {          margin: 0.5rem;        }        .modal-content {          border-radius: 1rem;        }        /* Toast提示调整 */        .toast-container {          right: 0;          left: 0;          bottom: 1rem;          top: auto;          margin: 0 1rem;        }        .toast {          width: 100%;        }        /* 节点列表移动端优化 */        .table {          table-layout: fixed;          width: 100%;          margin-bottom: 0 !important;        }        .table thead th:first-child {          padding-left: 1rem !important;          width: 100% !important;        }        .table thead th:last-child {          display: none !important;        }        .node-row td {          padding: 0.5rem !important;        }        .node-row td:first-child {          font-size: 0.85rem;          padding-right: 0 !important;          width: calc(100% - 90px) !important;        }        .node-row td:first-child .text-truncate {          max-width: 100% !important;          width: 100% !important;          padding-right: 8px !important;        }        .node-row td:last-child {          padding-left: 0 !important;          width: 90px !important;          position: relative !important;        }        .node-row td:last-child .text-truncate {          display: none !important;        }        /* 节点操作按钮移动端优化 */        .node-actions {          margin: 0 !important;          gap: 2px !important;          justify-content: flex-end !important;          width: 90px !important;          position: absolute !important;          right: 4px !important;          flex-wrap: nowrap !important;          align-items: center !important;        }        .node-actions .btn {          padding: 2px 4px !important;          min-width: 28px !important;          height: 28px !important;          margin: 0 !important;        }        .node-actions .btn i {          font-size: 12px;          line-height: 1;          display: flex !important;          align-items: center !important;          justify-content: center !important;        }        /* 批量操作按钮移动端优化 */        .batch-action-buttons {          flex-wrap: wrap !important;          gap: 0.25rem !important;          width: 100% !important;        }        .batch-action-buttons .btn {          font-size: 0.75rem !important;          padding: 0.25rem 0.5rem !important;          margin: 0 !important;          flex: 1 !important;          min-width: 0 !important;          white-space: nowrap !important;        }        .batch-action-buttons .btn i {          font-size: 0.75rem !important;          margin-right: 0.25rem !important;        }      }
 
             /* 模态框按钮样式 */      .modal .btn-secondary {        background-color: #e2e8f0;        border-color: #e2e8f0;        color: var(--text-color);      }      .modal .btn-secondary:hover {        background-color: #cbd5e0;        border-color: #cbd5e0;      }      /* 添加通用按钮样式 */
             /* 按钮基础样式 */      .action-btn {        display: inline-flex;        align-items: center;        justify-content: center;        padding: 0.625rem 1.25rem;        font-size: 1rem;        font-weight: 500;        border-radius: 8px;        transition: all 0.2s ease;        min-width: 140px;        height: 42px;        gap: 0.5rem;        line-height: 1;      }      .action-btn i {        font-size: 1rem;        display: inline-flex;        align-items: center;        justify-content: center;        width: 1rem;        height: 1rem;      }      /* 按钮颜色变体 */      .action-btn.btn-primary, .btn-primary {        background-color: var(--primary-color);        border-color: var(--primary-color);        color: white;      }      .action-btn.btn-success, .btn-success {        background-color: var(--success-color);        border-color: var(--success-color);        color: white;      }      .btn-edit {        background-color: #1cc88a;        border-color: #1cc88a;        color: white;      }      /* 按钮悬停效果 */      .action-btn:hover, .btn-edit:hover {        transform: translateY(-1px);        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);      }      .btn-edit:hover {        background-color: #19b57c;        border-color: #19b57c;      }      .btn-edit:focus {        background-color: #19b57c;        border-color: #19b57c;        box-shadow: 0 0 0 0.25rem rgba(28, 200, 138, 0.25);      }      .action-btn:active {        transform: translateY(0);      }      /* 调整容器样式 */      .container {        max-width: 1100px;        padding: 2rem 1rem;      }      .d-flex.justify-content-between.align-items-center.mb-4 {        margin-bottom: 2rem !important;      }            /* 节点列表区域样式 */      .node-list-area {        max-height: 0;        overflow: hidden;        transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);        background: #fff;        border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);        will-change: max-height;        font-size: 0.875rem;        color: var(--text-color);      }      .node-list-area.expanded {        max-height: none;        overflow: visible;      }      .node-list-area .table-responsive {        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);        transform-origin: top;      }      .node-list-area .link {        font-size: 0.875rem;        color: var(--text-color-secondary);        text-decoration: none;      }      .node-list-area .link:hover {        text-decoration: underline;      }
@@ -1279,21 +1290,32 @@ function serveAdminPanel(env, adminPath) {
                   <table class="table">
                     <thead>
                       <tr>
-                        <th style="min-width: 250px; width: 30%; padding-left: 1rem;">名称</th>
+                        <th style="min-width: 300px; width: 35%; padding-left: 0.75rem;">节点名称</th>
                         <th style="padding-left: 4.5rem;">节点链接</th>
                       </tr>
                     </thead>
                     <tbody></tbody>
                   </table>
                   <div class="d-flex justify-content-between align-items-center mt-3 px-2 pb-2">
-                    <button class="btn btn-danger btn-sm rounded-3" onclick="toggleBatchDelete('\${sub.path}')" id="batch-delete-btn-\${sub.path}" style="padding: 0.5rem 1rem;">
-                      <i class="fas fa-trash-alt me-1"></i>批量删除
-                    </button>
-                    <div class="batch-delete-actions" id="batch-delete-actions-\${sub.path}" style="display: none;">
-                      <button class="btn btn-danger btn-sm me-2 rounded-3" onclick="executeBatchDelete('\${sub.path}')" style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-check me-1"></i>确认删除
+                    <div class="batch-operation-buttons" id="batch-operation-buttons-\${sub.path}">
+                      <button class="btn btn-primary btn-sm rounded-3" onclick="enterBatchMode('\${sub.path}')" id="batch-mode-btn-\${sub.path}" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-tasks me-1"></i>批量操作
                       </button>
-                      <button class="btn btn-secondary btn-sm rounded-3" onclick="cancelBatchDelete('\${sub.path}')" style="padding: 0.5rem 1rem;">
+                    </div>
+                    <div class="batch-action-buttons" id="batch-action-buttons-\${sub.path}" style="display: none;">
+                      <button class="btn btn-success btn-sm rounded-3 me-2" onclick="executeBatchStatusChange('\${sub.path}', true)" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-toggle-on me-1"></i>启用
+                      </button>
+                      <button class="btn btn-warning btn-sm rounded-3 me-2" onclick="executeBatchStatusChange('\${sub.path}', false)" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-toggle-off me-1"></i>禁用
+                      </button>
+                      <button class="btn btn-danger btn-sm rounded-3 me-2" onclick="executeBatchDelete('\${sub.path}')" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-trash-alt me-1"></i>删除
+                      </button>
+                      <button class="btn btn-outline-secondary btn-sm rounded-3 me-2" onclick="toggleSelectAll('\${sub.path}')" id="select-all-btn-\${sub.path}" style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-check-square me-1"></i>全选
+                      </button>
+                      <button class="btn btn-secondary btn-sm rounded-3" onclick="exitBatchMode('\${sub.path}')" style="padding: 0.5rem 1rem;">
                         <i class="fas fa-times me-1"></i>取消
                       </button>
                     </div>
@@ -1313,34 +1335,85 @@ function serveAdminPanel(env, adminPath) {
       // 页面加载完成后，加载订阅列表
       window.addEventListener('load', loadSubscriptions);
 
-      // 切换批量删除模式
-      function toggleBatchDelete(subscriptionPath) {
+      // 进入批量操作模式
+      function enterBatchMode(subscriptionPath) {
         const nodeListArea = document.getElementById('node-list-' + subscriptionPath);
         const checkboxes = nodeListArea.querySelectorAll('.node-checkbox');
-        const deleteBtn = document.getElementById('batch-delete-btn-' + subscriptionPath);
-        const deleteActions = document.getElementById('batch-delete-actions-' + subscriptionPath);
+        const operationButtons = document.getElementById('batch-operation-buttons-' + subscriptionPath);
+        const actionButtons = document.getElementById('batch-action-buttons-' + subscriptionPath);
         
-        const isEnteringBatchMode = checkboxes[0].style.display === 'none';
-        
-        // 切换勾选框显示
+        // 显示勾选框
         checkboxes.forEach(checkbox => {
-          checkbox.style.display = isEnteringBatchMode ? 'inline-block' : 'none';
+          checkbox.style.display = 'inline-block';
         });
         
-        // 切换按钮和操作区域
-        deleteBtn.style.display = isEnteringBatchMode ? 'none' : 'block';
-        deleteActions.style.display = isEnteringBatchMode ? 'flex' : 'none';
-        nodeListArea.classList.toggle('batch-delete-mode', isEnteringBatchMode);
+        // 切换按钮显示
+        operationButtons.style.display = 'none';
+        actionButtons.style.display = 'flex';
+        
+        // 标记为批量模式
+        nodeListArea.classList.add('batch-mode');
         
         // 重置所有勾选框
-        nodeListArea.querySelectorAll('.node-checkbox').forEach(cb => {
+        checkboxes.forEach(cb => {
           cb.checked = false;
         });
+        
+        // 重置全选按钮状态
+        resetSelectAllButton(subscriptionPath);
+        
+        showToast('请选择要操作的节点，然后选择对应的操作', 'info');
       }
 
-      // 取消批量删除
-      function cancelBatchDelete(subscriptionPath) {
-        toggleBatchDelete(subscriptionPath);
+      // 退出批量操作模式
+      function exitBatchMode(subscriptionPath) {
+        const nodeListArea = document.getElementById('node-list-' + subscriptionPath);
+        const checkboxes = nodeListArea.querySelectorAll('.node-checkbox');
+        const operationButtons = document.getElementById('batch-operation-buttons-' + subscriptionPath);
+        const actionButtons = document.getElementById('batch-action-buttons-' + subscriptionPath);
+        
+        // 隐藏勾选框
+        checkboxes.forEach(checkbox => {
+          checkbox.style.display = 'none';
+        });
+        
+        // 切换按钮显示
+        operationButtons.style.display = 'flex';
+        actionButtons.style.display = 'none';
+        
+        // 取消批量模式标记
+        nodeListArea.classList.remove('batch-mode');
+      }
+
+      // 重置全选按钮状态
+      function resetSelectAllButton(subscriptionPath) {
+        const selectAllBtn = document.getElementById('select-all-btn-' + subscriptionPath);
+        if (selectAllBtn) {
+          selectAllBtn.innerHTML = '<i class="fas fa-check-square me-1"></i>全选';
+        }
+      }
+
+      // 全选/取消全选功能
+      function toggleSelectAll(subscriptionPath) {
+        const nodeListArea = document.getElementById('node-list-' + subscriptionPath);
+        const checkboxes = nodeListArea.querySelectorAll('.node-checkbox');
+        const selectAllBtn = document.getElementById('select-all-btn-' + subscriptionPath);
+        
+        // 检查当前是否为全选状态
+        const checkedCount = nodeListArea.querySelectorAll('.node-checkbox:checked').length;
+        const isAllSelected = checkedCount === checkboxes.length && checkboxes.length > 0;
+        
+        // 切换选择状态
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = !isAllSelected;
+        });
+        
+        // 更新按钮状态
+        if (isAllSelected) {
+          selectAllBtn.innerHTML = '<i class="fas fa-check-square me-1"></i>全选';
+        } else {
+          selectAllBtn.innerHTML = '<i class="fas fa-minus-square me-1"></i>取消';
+        }
       }
 
       // 执行批量删除
@@ -1394,8 +1467,8 @@ function serveAdminPanel(env, adminPath) {
             showToast(\`删除完成：成功 \${successCount} 个，失败 \${failCount} 个\`, 'warning');
           }
           
-          // 退出批量删除模式
-          toggleBatchDelete(subscriptionPath);
+          // 退出批量操作模式
+          exitBatchMode(subscriptionPath);
           
           // 重新加载节点列表和订阅信息
           await loadNodeList(subscriptionPath);
@@ -1406,6 +1479,72 @@ function serveAdminPanel(env, adminPath) {
           showToast('批量删除失败: ' + error.message, 'danger');
         }
       };
+
+      // 执行批量状态切换
+      async function executeBatchStatusChange(subscriptionPath, enabled) {
+        const nodeListArea = document.getElementById('node-list-' + subscriptionPath);
+        const checkedNodes = nodeListArea.querySelectorAll('.node-checkbox:checked');
+        
+        if (checkedNodes.length === 0) {
+          showToast('请先选择要操作的节点', 'warning');
+          return;
+        }
+        
+        const action = enabled ? '启用' : '禁用';
+        if (!confirm('确定要' + action + '选中的 ' + checkedNodes.length + ' 个节点吗？')) {
+          return;
+        }
+        
+        try {
+          let successCount = 0;
+          let failCount = 0;
+          
+          // 显示进度提示
+          showToast('正在' + action + '节点...', 'info');
+          
+          // 批量操作所选节点
+          for (const checkbox of checkedNodes) {
+            const nodeId = checkbox.value;
+            try {
+              const response = await fetch('/' + adminPath + '/api/subscriptions/' + subscriptionPath + '/nodes/' + nodeId, {
+                method: 'PATCH',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ enabled })
+              });
+              
+              if (response.ok) {
+                successCount++;
+              } else {
+                failCount++;
+              }
+            } catch (error) {
+              console.error('操作节点失败:', error);
+              failCount++;
+            }
+          }
+          
+          // 显示操作结果
+          if (failCount === 0) {
+            showToast('成功' + action + ' ' + successCount + ' 个节点', 'success');
+          } else {
+            showToast(action + '完成：成功 ' + successCount + ' 个，失败 ' + failCount + ' 个', 'warning');
+          }
+          
+          // 退出批量操作模式
+          exitBatchMode(subscriptionPath);
+          
+          // 重新加载节点列表和订阅信息
+          await loadNodeList(subscriptionPath);
+          await loadSubscriptions();
+          
+        } catch (error) {
+          console.error('批量操作失败:', error);
+          showToast('批量' + action + '失败: ' + error.message, 'danger');
+        }
+      }
       
       // 显示添加节点模态框
       function showAddNodeModal(subscriptionPath) {
@@ -1553,44 +1692,18 @@ function serveAdminPanel(env, adminPath) {
         }
       }
 
-      // 提取节点名称（前端版本）
+      // 提取节点名称（前端版本 - 复用后端实现）
       function extractNodeNameFrontend(nodeLink) {
         if (!nodeLink) return '未命名节点';
         
         // 处理snell节点
-        if(nodeLink.includes('snell,')) {
+        if(nodeLink.includes(NODE_TYPES_FRONTEND.SNELL)) {
           const name = nodeLink.split('=')[0].trim();
           return name || '未命名节点';
         }
         
-        // 处理 SOCKS 链接
-        if (nodeLink.toLowerCase().startsWith('socks://')) {
-          const hashIndex = nodeLink.indexOf('#');
-          if (hashIndex !== -1) {
-            try {
-              return decodeURIComponent(nodeLink.substring(hashIndex + 1));
-            } catch {
-              return nodeLink.substring(hashIndex + 1) || '未命名节点';
-            }
-          }
-          return '未命名节点';
-        }
-        
-        // 处理 VLESS 链接
-        if (nodeLink.toLowerCase().startsWith('vless://')) {
-          const hashIndex = nodeLink.indexOf('#');
-          if (hashIndex !== -1) {
-            try {
-              return decodeURIComponent(nodeLink.substring(hashIndex + 1));
-            } catch {
-              return nodeLink.substring(hashIndex + 1) || '未命名节点';
-            }
-          }
-          return '未命名节点';
-        }
-        
         // 处理 VMess 链接
-        if (nodeLink.toLowerCase().startsWith('vmess://')) {
+        if (nodeLink.toLowerCase().startsWith(NODE_TYPES_FRONTEND.VMESS)) {
           try {
             const config = JSON.parse(safeBase64DecodeFrontend(nodeLink.substring(8)));
             if (config.ps) {
@@ -1600,7 +1713,7 @@ function serveAdminPanel(env, adminPath) {
           return '未命名节点';
         }
 
-        // 处理其他类型的链接
+        // 处理其他使用哈希标记名称的链接类型（SS、TROJAN、VLESS、SOCKS、Hysteria2、TUIC等）
         const hashIndex = nodeLink.indexOf('#');
         if (hashIndex !== -1) {
           try {
@@ -1609,20 +1722,19 @@ function serveAdminPanel(env, adminPath) {
             return nodeLink.substring(hashIndex + 1) || '未命名节点';
           }
         }
-        
         return '未命名节点';
       }
 
-      // 节点类型配置（前端版本）
+      // 节点类型常量定义（复用后端定义）
       const NODE_TYPES_FRONTEND = {
-        'ss://': 'ss',
-        'vmess://': 'vmess',
-        'trojan://': 'trojan',
-        'vless://': 'vless',
-        'socks://': 'socks',
-        'hysteria2://': 'hysteria2',
-        'tuic://': 'tuic',
-        'snell,': 'snell'
+        SS: 'ss://',
+        VMESS: 'vmess://',
+        TROJAN: 'trojan://',
+        VLESS: 'vless://',
+        SOCKS: 'socks://',
+        HYSTERIA2: 'hysteria2://',
+        TUIC: 'tuic://',
+        SNELL: 'snell,'
       };
 
       // 检查是否是有效的节点链接
@@ -1633,7 +1745,7 @@ function serveAdminPanel(env, adminPath) {
           const parts = link.split('=')[1]?.trim().split(',');
           return parts && parts.length >= 4 && parts[0].trim() === 'snell';
         }
-        return Object.keys(NODE_TYPES_FRONTEND).some(prefix => lowerLink.startsWith(prefix));
+        return Object.values(NODE_TYPES_FRONTEND).some(prefix => lowerLink.startsWith(prefix));
       }
 
       // 获取节点类型
@@ -1642,12 +1754,12 @@ function serveAdminPanel(env, adminPath) {
         if(lowerLink.includes('=') && lowerLink.includes('snell,')) {
           return 'snell';
         }
-        return Object.entries(NODE_TYPES_FRONTEND).find(([prefix]) => 
+        return Object.entries(NODE_TYPES_FRONTEND).find(([key, prefix]) => 
           lowerLink.startsWith(prefix)
-        )?.[1] || '';
+        )?.[0].toLowerCase() || '';
       }
 
-      // 安全的UTF-8字符串解码函数（前端版本）
+      // 安全的UTF-8字符串解码函数（前端版本 - 复用后端实现）
       function safeUtf8DecodeFrontend(str) {
         if (!str) return str;
         
@@ -1740,21 +1852,22 @@ function serveAdminPanel(env, adminPath) {
               .replace(/&/g, '&amp;')
               .replace(/'/g, '\\\'')
               .replace(/"/g, '\\"');
+            const isEnabled = node.enabled === 1;
             
             return \`
-                  <tr class="node-row" data-id="\${node.id}" data-order="\${node.node_order}">
+                  <tr class="node-row" data-id="\${node.id}" data-order="\${node.node_order}" data-enabled="\${isEnabled ? '1' : '0'}">
       <td class="align-middle">
         <div class="d-flex align-items-center">
           <input class="node-checkbox me-2" type="checkbox" value="\${node.id}" 
             data-subscription="\${subscriptionPath}" style="display: none;">
-          <div class="text-nowrap text-truncate" style="max-width: 300px; padding-left: 0.5rem;" title="\${node.name}">
+          <div class="text-nowrap text-truncate \${!isEnabled ? 'text-danger' : ''}" style="max-width: 320px; \${!isEnabled ? 'text-decoration: line-through;' : ''}" title="\${node.name}">
             \${node.name}
           </div>
         </div>
       </td>
                 <td class="align-middle">
                   <div class="d-flex justify-content-between align-items-center" style="gap: 8px;">
-                              <div class="text-nowrap text-truncate" style="max-width: 400px; margin-left: 4rem;" title="\${nodeLink}">
+                              <div class="text-nowrap text-truncate \${!isEnabled ? 'text-danger' : ''}" style="max-width: 400px; margin-left: 4rem; \${!isEnabled ? 'text-decoration: line-through;' : ''}" title="\${nodeLink}">
             \${nodeLink}
           </div>
                     <div class="node-actions d-flex" style="flex-shrink: 0; gap: 4px;">
@@ -2032,7 +2145,7 @@ function serveAdminPanel(env, adminPath) {
         }
       }
 
-      // 表单验证工具函数（前端版本）
+      // 表单验证工具函数（复用后端实现）
       function validateSubscriptionPathFrontend(path) {
         return /^[a-z0-9-]{5,50}$/.test(path);
       }
@@ -2141,7 +2254,7 @@ function serveAdminPanel(env, adminPath) {
         }
       }
 
-      // 安全的Base64解码函数（前端版本）
+      // 安全的Base64解码函数（前端版本 - 复用后端实现）
       function safeBase64DecodeFrontend(str) {
         try {
           // 方法1：使用atob解码，然后正确处理UTF-8编码
@@ -2238,7 +2351,8 @@ async function handleGetNodes(env, subscriptionPath) {
       n.id,
       n.name,
       n.original_link,
-      n.node_order
+      n.node_order,
+      COALESCE(n.enabled, 1) as enabled
     FROM nodes n
     JOIN subscriptions s ON n.subscription_id = s.id
     WHERE s.path = ?
@@ -2294,8 +2408,8 @@ async function handleCreateNode(request, env, subscriptionPath) {
 
   // 直接插入新节点，不更新其他节点的顺序
   await env.DB.prepare(`
-    INSERT INTO nodes (subscription_id, name, original_link, node_order) 
-    VALUES (?, ?, ?, ?)
+    INSERT INTO nodes (subscription_id, name, original_link, node_order, enabled) 
+    VALUES (?, ?, ?, ?, 1)
   `).bind(subscriptionId, nodeName, originalLink, nodeOrder).run();
 
   return createSuccessResponse(null, '节点创建成功');
@@ -2317,6 +2431,35 @@ async function handleDeleteNode(env, subscriptionPath, nodeId) {
   }
 }
 
+// 添加切换节点状态的函数
+async function handleToggleNode(env, subscriptionPath, nodeId, request) {
+  try {
+    const { enabled } = await request.json();
+    
+    // 验证enabled值
+    if (typeof enabled !== 'boolean') {
+      return createErrorResponse('无效的状态值', 400);
+    }
+    
+    // 更新节点状态
+    const result = await env.DB.prepare(`
+      UPDATE nodes 
+      SET enabled = ?
+      WHERE id = ? AND subscription_id = (
+        SELECT id FROM subscriptions WHERE path = ? LIMIT 1
+      )
+    `).bind(enabled ? 1 : 0, nodeId, subscriptionPath).run();
+
+    if (result.changes === 0) {
+      return createErrorResponse('节点不存在或更新失败', 404);
+    }
+
+    return createSuccessResponse(null, '节点已' + (enabled ? '启用' : '禁用'));
+  } catch (error) {
+    return createErrorResponse('切换节点状态失败: ' + error.message);
+  }
+}
+
 // 生成订阅内容
 async function generateSubscriptionContent(env, path) {
   if (!path?.trim()) return '';
@@ -2325,7 +2468,7 @@ async function generateSubscriptionContent(env, path) {
     SELECT GROUP_CONCAT(n.original_link, CHAR(10)) as content
     FROM nodes n
     JOIN subscriptions s ON n.subscription_id = s.id
-    WHERE s.path = ? AND n.original_link IS NOT NULL
+    WHERE s.path = ? AND n.original_link IS NOT NULL AND (n.enabled IS NULL OR n.enabled = 1)
     GROUP BY s.id
     ORDER BY n.node_order ASC
   `).bind(path).all();
