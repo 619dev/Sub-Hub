@@ -3163,6 +3163,12 @@ function generateClashConfig(proxies) {
         proxies: ['节点选择', 'DIRECT'].concat(proxyNames),
         icon: 'https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png'
       },
+      {
+        name: 'Speedtest',
+        type: 'select',
+        proxies: ['节点选择', 'DIRECT'].concat(proxyNames),
+        icon: 'https://cdn.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Speedtest.png'
+      },
     ],
     
     // 分流规则
@@ -3175,10 +3181,11 @@ function generateClashConfig(proxies) {
       
       
       // 域名类规则
+      'RULE-SET,speedtest,Speedtest',
       'RULE-SET,telegram_non_ip,Telegram',
-      'RULE-SET,apple_cdn,苹果服务',
-      'RULE-SET,apple_cn_non_ip,苹果服务',
-      'RULE-SET,microsoft_cdn_non_ip,微软服务',
+      'RULE-SET,apple_cdn,DIRECT',
+      'RULE-SET,apple_cn_non_ip,DIRECT',
+      'RULE-SET,microsoft_cdn_non_ip,DIRECT',
       'RULE-SET,apple_services,苹果服务',
       'RULE-SET,microsoft_non_ip,微软服务',
       'RULE-SET,download_domainset,CDN服务',
@@ -3262,6 +3269,15 @@ function generateClashConfig(proxies) {
         proxy: '节点选择',
         url: 'https://ruleset.skk.moe/Clash/ip/reject.txt',
         path: './rule_set/sukkaw_ruleset/reject_ip.txt'
+      },
+      speedtest: {
+        type: 'http',
+        behavior: 'domain',
+        interval: 43200,
+        format: 'text',
+        proxy: 'Speedtest',
+        url: 'https://ruleset.skk.moe/Clash/domainset/speedtest.txt',
+        path: './rule_set/sukkaw_ruleset/speedtest.txt'
       },
       cdn_domainset: {
         type: 'http',
