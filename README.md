@@ -7,6 +7,10 @@
 - 本项目不使用任何第三方订阅转换，所以可能有部分协议转换不完整，目前支持的协议经过测试没发现太大问题
 - 基于Cursor纯AI代码 ~~越来越屎山了~~，有问题可以提，但不一定能解决
 
+## 2025.07.10更新：
+
+  - 新增禁用节点功能，被禁用的节点将不显示在订阅链接中
+
 ## 2025.06.15更新：
 
   - 修复了批量删除时，复选框未对齐问题
@@ -101,6 +105,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     name TEXT NOT NULL,
     original_link TEXT NOT NULL,
     node_order INTEGER NOT NULL DEFAULT 0,
+    enabled INTEGER DEFAULT 1,
     FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
 );
    ```
