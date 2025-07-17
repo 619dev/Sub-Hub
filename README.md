@@ -10,6 +10,17 @@
 ## 2025.07.10更新：
 
   - 新增禁用节点功能，被禁用的节点将不显示在订阅链接中
+  - 此次更新需要添加新字段 enabled 到 nodes 表，或者重新部署数据库
+   ```bash
+ALTER TABLE nodes ADD COLUMN enabled INTEGER DEFAULT 1;
+   ```
+这个命令会在表中添加 enabled 字段，并设置默认值为 1。但是请注意：这个默认值只适用于将来插入的新记录。现有记录不会自动更新。
+
+更新现有记录的 enabled 值为 1
+   ```bash
+UPDATE nodes SET enabled = 1 WHERE enabled IS NULL;
+   ```
+这个命令会将当前表中所有 enabled 为空的记录设置为 1。
 
 ## 2025.06.15更新：
 
