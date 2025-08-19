@@ -2679,6 +2679,22 @@ async function handleUpdateSubscriptionInfo(env, path, data) {
       }
     }
 
+    // anytls 节点转换
+    if (node.protocol === 'anytls') {
+      if (format === 'surge') {
+        // Surge 不支持 anytls，跳过
+        return null;
+      } else {
+        // 原始格式
+        const params = new URLSearchParams();
+        if (node.sni && node.sni !== node.server) params.set('sni', node.sni);
+        if (node.alpn) params.set('alpn', node.alpn);
+        if (node.allowInsecure) params.set('allowInsecure', '1');
+        if (node.fingerprint && node.fingerprint !== 'chrome') params.set('fp', node.fingerprint);
+        return `anytls://${encodeURIComponent(node.password)}@${node.server}:${node.port}?${params.toString()}#${encodeURIComponent(node.name)}`;
+      }
+    }
+
     // 使用事务确保数据一致性
     const statements = [
       env.DB.prepare(
