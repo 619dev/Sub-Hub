@@ -47,6 +47,206 @@ function extractNodeName(nodeLink) {
   return '未命名节点';
 }
 
+function parseNodeLink(link) {
+    try {
+        link = link.trim();
+        
+        // 处理 ss:// 链接
+        if (link.startsWith('ss://')) {
+            return parseShadowsocks(link);
+        }
+        
+        // 处理 vmess:// 链接
+        if (link.startsWith('vmess://')) {
+            return parseVmess(link);
+        }
+        
+        // 处理 vless:// 链接
+        if (link.startsWith('vless://')) {
+            return parseVless(link);
+        }
+        
+        // 处理 trojan:// 链接
+        if (link.startsWith('trojan://')) {
+            return parseTrojan(link);
+        }
+        
+        // 处理 socks5:// 链接
+        if (link.startsWith('socks5://') || link.startsWith('socks://')) {
+            return parseSocks5(link);
+        }
+        
+        // 处理 snell:// 链接
+        if (link.startsWith('snell://')) {
+            return parseSnell(link);
+        }
+        
+        // 处理 hysteria2:// 链接
+        if (link.startsWith('hysteria2://') || link.startsWith('hy2://')) {
+            return parseHysteria2(link);
+        }
+        
+        // 处理 tuic:// 链接
+        if (link.startsWith('tuic://')) {
+            return parseTuic(link);
+        }
+        
+        // 处理 anytls:// 链接
+        if (link.startsWith('anytls://')) {
+            return parseAnytls(link);
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('解析节点链接时出错:', error);
+        return null;
+    }
+}
+
+function parseAnytls(link) {
+    try {
+        // anytls://password@server:port?params#name
+        const match = link.match(/^anytls:\/\/([^@]+)@([^:\/\?#]+)(?::(\d+))?(?:\?([^#]*))?(?:#(.*))?$/);
+        if (!match) {
+            console.error('Invalid anytls link format:', link);
+            return null;
+        }
+        
+        const [, password, server, port, query, name] = match;
+        
+        // 解析查询参数
+        const params = new URLSearchParams(query || '');
+        
+        return {
+            type: 'anytls',
+            name: name ? decodeURIComponent(name) : `${server}:${port || 443}`,
+            server: server,
+            port: parseInt(port) || 443,
+            password: password,
+            sni: params.get('sni') || server,
+            alpn: params.get('alpn') || 'h2,http/1.1',
+            allowInsecure: params.get('allowInsecure') === '1' || params.get('skip-cert-verify') === '1',
+            fingerprint: params.get('fp') || params.get('fingerprint') || 'chrome'
+        };
+    } catch (error) {
+        console.error('解析 anytls 链接时出错:', error);
+        return null;
+    }
+}
+
+function convertToOriginal(node) {
+    switch (node.type) {
+        case 'ss':
+            if (node.method === '2022-blake3-aes-128-gcm' || node.method === '2022-blake3-aes-256-gcm' || node.method === '2022-blake3-chacha20-poly1305') {
+                return `ss://${btoa(`${node.method}:${node.password}`)}@${node.server}:${node.port}#${encodeURIComponent(node.name)}`;
+            } else {
+                return `ss://${btoa(`${node.method}:${node.password}`)}@${node.server}:${node.port}#${encodeURIComponent(node.name)}`;
+            }
+        
+        case 'vmess':
+            const vmessConfig = {
+                v: "2",
+                ps: node.name,
+                add: node.server,
+                port: node.port.toString(),
+                id: node.uuid,
+                aid: node.alterId.toString(),
+                net: node.network,
+                type: node.type || "none",
+                host: node.host || "",
+                path: node.path || "",
+                tls: node.tls || "",
+                sni: node.sni || "",
+                alpn: node.alpn || ""
+            };
+            return `vmess://${btoa(JSON.stringify(vmessConfig))}`;
+        
+        case 'vless':
+            let vlessUrl = `vless://${node.uuid}@${node.server}:${node.port}?`;
+            const vlessParams = [];
+            if (node.encryption) vlessParams.push(`encryption=${node.encryption}`);
+            if (node.security) vlessParams.push(`security=${node.security}`);
+            if (node.sni) vlessParams.push(`sni=${node.sni}`);
+            if (node.alpn) vlessParams.push(`alpn=${node.alpn}`);
+            if (node.fingerprint) vlessParams.push(`fp=${node.fingerprint}`);
+            if (node.type) vlessParams.push(`type=${node.type}`);
+            if (node.host) vlessParams.push(`host=${node.host}`);
+            if (node.path) vlessParams.push(`path=${encodeURIComponent(node.path)}`);
+            if (node.serviceName) vlessParams.push(`serviceName=${node.serviceName}`);
+            if (node.mode) vlessParams.push(`mode=${node.mode}`);
+            vlessUrl += vlessParams.join('&');
+            vlessUrl += `#${encodeURIComponent(node.name)}`;
+            return vlessUrl;
+        
+        case 'trojan':
+            let trojanUrl = `trojan://${node.password}@${node.server}:${node.port}?`;
+            const trojanParams = [];
+            if (node.sni) trojanParams.push(`sni=${node.sni}`);
+            if (node.alpn) trojanParams.push(`alpn=${node.alpn}`);
+            if (node.fingerprint) trojanParams.push(`fp=${node.fingerprint}`);
+            if (node.allowInsecure) trojanParams.push(`allowInsecure=1`);
+            trojanUrl += trojanParams.join('&');
+            trojanUrl += `#${encodeURIComponent(node.name)}`;
+            return trojanUrl;
+        
+        case 'socks5':
+            if (node.username && node.password) {
+                return `socks5://${node.username}:${node.password}@${node.server}:${node.port}#${encodeURIComponent(node.name)}`;
+            } else {
+                return `socks5://${node.server}:${node.port}#${encodeURIComponent(node.name)}`;
+            }
+        
+        case 'snell':
+            let snellUrl = `snell://${node.server}:${node.port}?`;
+            const snellParams = [];
+            snellParams.push(`psk=${node.psk}`);
+            if (node.version) snellParams.push(`version=${node.version}`);
+            if (node.obfs) snellParams.push(`obfs=${node.obfs}`);
+            if (node.obfsHost) snellParams.push(`obfs-host=${node.obfsHost}`);
+            snellUrl += snellParams.join('&');
+            snellUrl += `#${encodeURIComponent(node.name)}`;
+            return snellUrl;
+        
+        case 'hysteria2':
+            let hy2Url = `hysteria2://${node.password}@${node.server}:${node.port}?`;
+            const hy2Params = [];
+            if (node.sni) hy2Params.push(`sni=${node.sni}`);
+            if (node.alpn) hy2Params.push(`alpn=${node.alpn}`);
+            if (node.obfs) hy2Params.push(`obfs=${node.obfs}`);
+            if (node.obfsPassword) hy2Params.push(`obfs-password=${node.obfsPassword}`);
+            if (node.allowInsecure) hy2Params.push(`insecure=1`);
+            hy2Url += hy2Params.join('&');
+            hy2Url += `#${encodeURIComponent(node.name)}`;
+            return hy2Url;
+        
+        case 'tuic':
+            let tuicUrl = `tuic://${node.uuid}:${node.password}@${node.server}:${node.port}?`;
+            const tuicParams = [];
+            if (node.sni) tuicParams.push(`sni=${node.sni}`);
+            if (node.alpn) tuicParams.push(`alpn=${node.alpn}`);
+            if (node.allowInsecure) tuicParams.push(`allow_insecure=1`);
+            if (node.congestionControl) tuicParams.push(`congestion_control=${node.congestionControl}`);
+            if (node.udpRelayMode) tuicParams.push(`udp_relay_mode=${node.udpRelayMode}`);
+            tuicUrl += tuicParams.join('&');
+            tuicUrl += `#${encodeURIComponent(node.name)}`;
+            return tuicUrl;
+        
+        case 'anytls':
+            let anytlsUrl = `anytls://${node.password}@${node.server}:${node.port}?`;
+            const anytlsParams = [];
+            if (node.sni) anytlsParams.push(`sni=${node.sni}`);
+            if (node.alpn) anytlsParams.push(`alpn=${node.alpn}`);
+            if (node.fingerprint) anytlsParams.push(`fp=${node.fingerprint}`);
+            if (node.allowInsecure) anytlsParams.push(`allowInsecure=1`);
+            anytlsUrl += anytlsParams.join('&');
+            anytlsUrl += `#${encodeURIComponent(node.name)}`;
+            return anytlsUrl;
+        
+        default:
+            return null;
+    }
+}
+
 export default {
   async fetch(request, env) {
     // 解析请求路径和参数
@@ -2676,22 +2876,6 @@ async function handleUpdateSubscriptionInfo(env, path, data) {
       
       if (results.length > 0) {
         return createErrorResponse('该路径已被使用', 400);
-      }
-    }
-
-    // anytls 节点转换
-    if (node.protocol === 'anytls') {
-      if (format === 'surge') {
-        // Surge 不支持 anytls，跳过
-        return null;
-      } else {
-        // 原始格式
-        const params = new URLSearchParams();
-        if (node.sni && node.sni !== node.server) params.set('sni', node.sni);
-        if (node.alpn) params.set('alpn', node.alpn);
-        if (node.allowInsecure) params.set('allowInsecure', '1');
-        if (node.fingerprint && node.fingerprint !== 'chrome') params.set('fp', node.fingerprint);
-        return `anytls://${encodeURIComponent(node.password)}@${node.server}:${node.port}?${params.toString()}#${encodeURIComponent(node.name)}`;
       }
     }
 
