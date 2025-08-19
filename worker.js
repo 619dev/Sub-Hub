@@ -12,7 +12,8 @@ const NODE_TYPES = {
   SOCKS: 'socks://',
   HYSTERIA2: 'hysteria2://',
   TUIC: 'tuic://',
-  SNELL: 'snell,'
+  SNELL: 'snell,',
+  ANYTLS: 'anytls://'
 };
 
 function extractNodeName(nodeLink) {
@@ -1934,7 +1935,8 @@ function serveAdminPanel(env, adminPath) {
         SOCKS: 'socks://',
         HYSTERIA2: 'hysteria2://',
         TUIC: 'tuic://',
-        SNELL: 'snell,'
+        SNELL: 'snell,',
+        ANYTLS: 'anytls://'
       };
 
       // 检查是否是有效的节点链接
@@ -2596,7 +2598,7 @@ async function handleCreateNode(request, env, subscriptionPath) {
   // 验证节点类型
   const lowerContent = originalLink.toLowerCase();
   const isSnell = lowerContent.includes('=') && lowerContent.includes('snell,');
-  if (!['ss://', 'vmess://', 'trojan://', 'vless://', 'socks://', 'hysteria2://', 'tuic://'].some(prefix => lowerContent.startsWith(prefix)) && !isSnell) {
+  if (!['ss://', 'vmess://', 'trojan://', 'vless://', 'socks://', 'hysteria2://', 'tuic://', 'anytls://'].some(prefix => lowerContent.startsWith(prefix)) && !isSnell) {
     return createErrorResponse('不支持的节点格式', 400);
   }
   
@@ -2971,7 +2973,8 @@ function convertToSurge(content) {
     [NODE_TYPES.TROJAN, parseTrojanLink],
     [NODE_TYPES.SOCKS, parseSocksLink],
     [NODE_TYPES.HYSTERIA2, parseHysteria2ToSurge],
-    [NODE_TYPES.TUIC, parseTuicToSurge]
+    [NODE_TYPES.TUIC, parseTuicToSurge],
+    [NODE_TYPES.ANYTLS, parseAnytlsToSurge]
   ]);
   
   return content
@@ -3167,6 +3170,11 @@ function parseNodeToClash(nodeLink) {
   // 解析 TUIC 节点
   if (lowerLink.startsWith(NODE_TYPES.TUIC)) {
     return parseTuicToClash(nodeLink);
+  }
+  
+  // 解析 AnyTLS 节点
+  if (lowerLink.startsWith(NODE_TYPES.ANYTLS)) {
+    return parseAnytlsToClash(nodeLink);
   }
   
   return null;
@@ -3434,6 +3442,50 @@ function parseSocksToClash(socksLink) {
       
       if (username) node.username = username;
       if (password) node.password = password;
+    }
+    
+    return node;
+  } catch {
+    return null;
+  }
+}
+
+// 解析 AnyTLS 节点为 Clash 格式
+function parseAnytlsToClash(anytlsLink) {
+  if (!anytlsLink.startsWith(NODE_TYPES.ANYTLS)) return null;
+  
+  try {
+    const url = new URL(anytlsLink);
+    if (!url.hostname || !url.port || !url.username) return null;
+    
+    const params = new URLSearchParams(url.search);
+    const node = {
+      name: url.hash ? decodeURIComponent(url.hash.substring(1)) : '未命名节点',
+      type: 'http',
+      server: url.hostname,
+      port: parseInt(url.port),
+      username: '',
+      password: url.username,
+      tls: true,
+      'skip-cert-verify': params.get('allowInsecure') === '1' || params.get('skip-cert-verify') === '1'
+    };
+    
+    // SNI 配置
+    const sni = params.get('sni');
+    if (sni) {
+      node.sni = safeDecodeURIComponent(sni);
+    }
+    
+    // ALPN 配置
+    const alpn = params.get('alpn');
+    if (alpn) {
+      node.alpn = alpn.split(',').map(s => s.trim());
+    }
+    
+    // 指纹配置
+    const fingerprint = params.get('fp') || params.get('fingerprint');
+    if (fingerprint) {
+      node.fingerprint = fingerprint;
     }
     
     return node;
@@ -4145,6 +4197,55 @@ function parseTuicToSurge(tuicLink) {
     const reduceRtt = params.get('reduce_rtt');
     if (reduceRtt === 'true' || reduceRtt === '1') {
       configParts.push('reduce-rtt=true');
+    }
+    
+    return configParts.join(', ');
+  } catch (error) {
+    return null;
+  }
+}
+
+// 解析 AnyTLS 链接为 Surge 格式
+function parseAnytlsToSurge(anytlsLink) {
+  if (!anytlsLink.startsWith(NODE_TYPES.ANYTLS)) return null;
+  
+  try {
+    const url = new URL(anytlsLink);
+    if (!url.hostname || !url.port || !url.username) return null;
+    
+    const params = new URLSearchParams(url.search);
+    const nodeName = url.hash ? decodeURIComponent(url.hash.substring(1)) : '未命名节点';
+    
+    // 构建 Surge 格式的 HTTP 配置
+    const configParts = [
+      `${nodeName} = http`,
+      url.hostname,
+      url.port,
+      url.username, // password
+      '', // username (empty for anytls)
+      'tls=true'
+    ];
+    
+    // SNI 配置
+    const sni = params.get('sni');
+    if (sni) configParts.push(`sni=${safeDecodeURIComponent(sni)}`);
+    
+    // 跳过证书验证
+    const allowInsecure = params.get('allowInsecure') || params.get('skip-cert-verify');
+    if (allowInsecure === '1' || allowInsecure === 'true') {
+      configParts.push('skip-cert-verify=true');
+    }
+    
+    // ALPN 配置
+    const alpn = params.get('alpn');
+    if (alpn) {
+      configParts.push(`alpn=${alpn.replace(/,/g, ':')}`);
+    }
+    
+    // 指纹配置
+    const fingerprint = params.get('fp') || params.get('fingerprint');
+    if (fingerprint) {
+      configParts.push(`server-cert-fingerprint-sha256=${fingerprint}`);
     }
     
     return configParts.join(', ');
